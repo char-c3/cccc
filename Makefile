@@ -1,7 +1,7 @@
 cccc: cccc.c
 
 test: cccc
-	./test/sh
+	./test.sh
 
 clean:
 	rm -f cccc *.o *~ *.swp tmp*
