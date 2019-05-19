@@ -136,7 +136,9 @@ Node *term() {
 }
 
 Node *unary() {
-    if (consume('-')) {
+    if (consume('+')) {
+        return term();
+    } else if (consume('-')) {
         return new_node('-', new_node_num(0), term());
     }
     return term();
