@@ -1,2 +1,4 @@
 # cccc
-char-c3 c compiler (ref: https://www.sigbus.info/compilerbook#language_lawyer)
+char-c3 c compiler 
+https://www.sigbus.info/compilerbook を読んで作った(作っている) Cコンパイラ
+
