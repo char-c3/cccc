@@ -1,4 +1,11 @@
-cccc: cccc.c
+CFLAGS=-Wall -std=c11
+SRCS=$(wildcard *.c)
+OBJS=$(SRCS:.c=.o)
+
+cccc: $(OBJS)
+	$(CC) -o cccc $(OBJS) $(LDFLAGS)
+
+$(OBJS): cccc.h
 
 test: cccc
 	./cccc --test
