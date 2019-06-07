@@ -4,6 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+void expect(int line, int expected, int actual) {
+    if (expected == actual) {
+        return;
+    }
+    
+    fprintf(stderr, "%d: %d expected, but got %d\n", line, expected, actual);
+    exit(1);
+}
+
 // トークンの型を表す値
 enum {
     TK_EQ = 252,    // ==
@@ -21,6 +30,16 @@ typedef struct {
     char *input; // トークン文字列 (エラーメッセージ用)
 } Token;
 
+// Tokenを生成するための関数
+Token* new_token(int ty, int val, char* p) {
+    Token *token = (Token *)malloc(sizeof(Token));
+    token->ty = ty;
+    token->val = val;
+    token->input = p;
+    return token;
+}
+
+
 enum {
     ND_NUM = 256,   // 整数のノードの型
 };
@@ -32,12 +51,51 @@ typedef struct Node {
     int val;            // tyがND_NUMの場合のみ使う
 } Node;
 
+typedef struct {
+    void **data;
+    int capacity;
+    int len;
+} Vector;
+
+Vector *new_vector() {
+    Vector *vec = malloc(sizeof(Vector));
+    vec->capacity = 16;
+    vec->data = malloc(sizeof(void *) * vec->capacity);
+    vec->len = 0;
+    return vec;
+}
+
+void vec_push(Vector *vec, void *elem) {
+    if (vec->capacity == vec->len) {
+        vec->capacity *= 2;
+        vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
+    }
+    vec->data[vec->len++] = elem;
+}
+
+void runtest() {
+    Vector *vec = new_vector();
+    expect(__LINE__, 0, vec->len);
+
+    for (int i = 0; i < 100; i++) {
+        vec_push(vec, (void *)i);
+    }
+
+    expect(__LINE__, 100, vec->len);
+    expect(__LINE__, 0, (long)vec->data[0]);
+    expect(__LINE__, 50, (long)vec->data[50]);
+    expect(__LINE__, 99, (long)vec->data[99]);
+
+    printf("OK\n");
+}
+
 // 入力プログラム
 char *user_input;
 
 // トークナイズした結果のトークン列はこの配列に保存する
 // 100個以上のトークンは来ないものとする
-Token tokens[100];
+// Token tokens[100];
+Vector *tokens;
 
 // エラーを報告するための関数
 // printfと同じ引数をとる
@@ -74,8 +132,9 @@ void tokenize() {
         if (*p == '=') {
             p++;
             if (*p == '=') {
-                tokens[i].ty = TK_EQ;
-                tokens[i].input = p;
+                // tokens[i].ty = TK_EQ;
+                // tokens[i].input = p;
+                vec_push(tokens, new_token(TK_EQ, 0, p));
                 i++;
                 p++;
             } else {
@@ -84,19 +143,69 @@ void tokenize() {
             continue;
         }
 
+        if (*p == '!') {
+            p++;
+            if (*p == '=') {
+                // tokens[i].ty = TK_NE;
+                // tokens[i].input = p;
+                vec_push(tokens, new_token(TK_NE, 0, p));
+                i++;
+                p++;
+            } else {
+                error_at(p, "トークナイズできません。=がありません。");
+            }
+            continue;
+        }
+
+        if (*p == '<') {
+            p++;
+            if (*p == '=') {
+                // tokens[i].ty = TK_LE;
+                // tokens[i].input = p;
+                vec_push(tokens, new_token(TK_LE, 0, p));
+                i++;
+                p++;
+            } else {
+                // tokens[i].ty = '<';
+                // tokens[i].input = p - 1;
+                vec_push(tokens, new_token('<', 0, p - 1));
+                i++;
+            }
+            continue;
+        }
+
+        if (*p == '>') {
+            p++;
+            if (*p == '=') {
+                // tokens[i].ty = TK_GE;
+                // tokens[i].input = p;
+                vec_push(tokens, new_token(TK_GE, 0, p));
+                i++;
+                p++;
+            } else {
+                // tokens[i].ty = '>';
+                // tokens[i].input = p - 1;
+                vec_push(tokens, new_token('>', 0, p - 1));
+                i++;
+            }
+            continue;
+        }
+
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/'
-         || *p == '(' || *p == ')' || *p == '<' || *p == '>') {
-            tokens[i].ty = *p;
-            tokens[i].input = p;
+         || *p == '(' || *p == ')' || *p == '>') {
+            // tokens[i].ty = *p;
+            // tokens[i].input = p;
+            vec_push(tokens, new_token(*p, 0, p));
             i++;
             p++;
             continue;
         }
 
         if (isdigit(*p)) {
-            tokens[i].ty = TK_NUM;
-            tokens[i].input = p;
-            tokens[i].val = strtol(p, &p, 10);
+            // tokens[i].ty = TK_NUM;
+            // tokens[i].input = p;
+            // tokens[i].val = strtol(p, &p, 10);
+            vec_push(tokens, new_token(TK_NUM, strtol(p, &p, 10), p));
             i++;
             continue;
         }
@@ -104,8 +213,9 @@ void tokenize() {
         error_at(p, "トークナイズできません");
     }
 
-    tokens[i].ty = TK_EOF;
-    tokens[i].input = p;
+    // tokens[i].ty = TK_EOF;
+    // tokens[i].input = p;
+    vec_push(tokens, new_token(TK_EOF, 0, p));
 }
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -126,7 +236,8 @@ Node *new_node_num(int val) {
 int pos = 0;
 
 int consume(int ty) {
-    if (tokens[pos].ty != ty) {
+    // if (tokens[pos].ty != ty) {
+    if (((Token *)tokens->data[pos])->ty != ty) {
         return 0;
     }
     pos++;
@@ -140,17 +251,17 @@ Node *term() {
     if (consume('(')) {
         Node *node = expr();
         if (!consume(')')) {
-            error_at(tokens[pos].input, "開き括弧に対応する閉じ括弧がありません");
+            error_at(((Token *)tokens->data[pos])->input, "開き括弧に対応する閉じ括弧がありません");
         }
         return node;
     }
 
     // そうでなければ数値のはず
-    if (tokens[pos].ty == TK_NUM) {
-        return new_node_num(tokens[pos++].val);
+    if (((Token *)tokens->data[pos])->ty == TK_NUM) {
+        return new_node_num(((Token *)tokens->data[pos++])->val);
     }
 
-    error_at(tokens[pos].input, "数値でも開きかっこでもないトークンです");
+    error_at(((Token *)tokens->data[pos])->input, "数値でも開きかっこでもないトークンです");
 }
 
 Node *unary() {
@@ -198,6 +309,10 @@ Node *relational() {
             node = new_node('<', node, add());
         } else if (consume('>')) {
             node = new_node('<', add(), node);
+        } else if (consume(TK_LE)) {
+            node = new_node(TK_LE, node, add());
+        } else if (consume(TK_GE)) {
+            node = new_node(TK_LE, add(), node);
         } else {
             return node;
         }
@@ -210,6 +325,8 @@ Node *equality() {
     for (;;) {
         if (consume(TK_EQ)) {
             node = new_node(TK_EQ, node, relational());
+        } else if (consume(TK_NE)) {
+            node = new_node(TK_NE, node, relational());
         } else {
             return node;
         }
@@ -238,9 +355,19 @@ void gen(Node *node) {
         printf("  sete al\n");
         printf("  movzb rax, al\n");
         break;
+    case TK_NE:
+        printf("  cmp rax, rdi\n");
+        printf("  setne al\n");
+        printf("  movzb rax, al\n");
+        break;
     case '<':
         printf("  cmp rax, rdi\n");
         printf("  setl al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case TK_LE:
+        printf("  cmp rax, rdi\n");
+        printf("  setle al\n");
         printf("  movzb rax, al\n");
         break;
     case '+':
@@ -266,6 +393,13 @@ int main(int argc, char **argv) {
         fprintf(stderr, "引数の個数が正しくありません\n");
         return 1;
     }
+
+    if (strcmp("--test", argv[1]) == 0) {
+        runtest();
+        return 0;
+    }
+
+    tokens = new_vector();
 
     // トークナイズしてパースする
     user_input = argv[1];
