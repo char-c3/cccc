@@ -6,8 +6,12 @@
 
 // トークンの型を表す値
 enum {
-    TK_NUM = 256, // 整数トークン
-    TK_EOF,       // 入力の終わりを表すトークン
+    TK_EQ = 252,    // ==
+    TK_NE = 253,    // !=
+    TK_LE = 254,    // <=
+    TK_GE = 255,    // >=
+    TK_NUM = 256,   // 整数トークン
+    TK_EOF,         // 入力の終わりを表すトークン
 };
 
 // トークンの型
@@ -67,7 +71,21 @@ void tokenize() {
             continue;
         }
 
-        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
+        if (*p == '=') {
+            p++;
+            if (*p == '=') {
+                tokens[i].ty = TK_EQ;
+                tokens[i].input = p;
+                i++;
+                p++;
+            } else {
+                error_at(p, "トークナイズできません。=がありません。");
+            }
+            continue;
+        }
+
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/'
+         || *p == '(' || *p == ')' || *p == '<' || *p == '>') {
             tokens[i].ty = *p;
             tokens[i].input = p;
             i++;
@@ -158,7 +176,7 @@ Node *mul() {
     }
 }
 
-Node *expr() {
+Node *add() {
     Node *node = mul();
 
     for (;;) {
@@ -170,6 +188,36 @@ Node *expr() {
             return node;
         }
     }
+}
+
+Node *relational() {
+    Node *node = add();
+
+    for (;;) {
+        if (consume('<')) {
+            node = new_node('<', node, add());
+        } else if (consume('>')) {
+            node = new_node('<', add(), node);
+        } else {
+            return node;
+        }
+    }
+}
+
+Node *equality() {
+    Node *node = relational();
+
+    for (;;) {
+        if (consume(TK_EQ)) {
+            node = new_node(TK_EQ, node, relational());
+        } else {
+            return node;
+        }
+    }
+}
+
+Node *expr() {
+    return equality();
 }
 
 void gen(Node *node) {
@@ -185,6 +233,16 @@ void gen(Node *node) {
     printf("  pop rax\n");
 
     switch (node->ty) {
+    case TK_EQ:
+        printf("  cmp rax, rdi\n");
+        printf("  sete al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case '<':
+        printf("  cmp rax, rdi\n");
+        printf("  setl al\n");
+        printf("  movzb rax, al\n");
+        break;
     case '+':
         printf("  add rax, rdi\n");
         break;
