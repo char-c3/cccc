@@ -11,7 +11,7 @@ try() {
     if [ "$actual" = "$expected" ]; then
         echo "$input => $actual"
     else
-        echo "$expected expected, but got $actual"
+        echo "\"$input\": $expected expected, but got $actual"
         exit 1
     fi
 }
@@ -22,7 +22,7 @@ parse() {
     ./cccc "$input"
     if [ $? = "0" ]; then
         if [ $expected = "ok" ]; then
-            echo "parser can parse $input"
+            echo "OK, parser can parse $input"
         else
             echo "$expected expected, but result is ok"
             exit 1
@@ -32,7 +32,7 @@ parse() {
             echo "$expected expected, but result is failed"
             exit 1
         else
-            echo "parser cannnot parse $input"
+            echo "OK, parser cannnot parse $input"
         fi
     fi
 }
@@ -70,5 +70,10 @@ parse "ok" "a=b=2;"
 parse "ok" "1;2;"
 parse "ok" "a=1;b=c=222;"
 parse "failed" "a=1"
+try 1 "z = 1;"
+try 2 "a=b=2;"
+try 222 "a=1;b=c=222;"
+parse "fail" "1=2;"
+parse "fail" "a+1=2;"
 
-echo OK
+echo all OK

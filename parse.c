@@ -43,7 +43,7 @@ void tokenize() {
                 i++;
                 p++;
             } else {
-                vec_push(tokens, new_token(TK_EQ, 0, p - 1));
+                vec_push(tokens, new_token('=', 0, p - 1));
                 i++;
             }
             continue;
@@ -150,7 +150,6 @@ Node *new_node_ident(char name) {
     Node *node = malloc(sizeof(Node));
     node->ty = ND_IDENT;
     node->name = name;
-    fprintf(stderr, "name is %c\n", name);
     return node;
 }
 

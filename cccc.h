@@ -65,6 +65,7 @@ Node *expr();
 Node *stmt();
 void  program();
 
+void gen_lval(Node *node);
 void gen(Node *node);
 
 // 入力プログラム
