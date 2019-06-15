@@ -1,4 +1,4 @@
-#include "cccc.h"
+#include "cccc.h";
 
 int pos = 0;
 
@@ -43,7 +43,8 @@ void tokenize() {
                 i++;
                 p++;
             } else {
-                error_at(p, "トークナイズできません。=がありません。");
+                vec_push(tokens, new_token(TK_EQ, 0, p - 1));
+                i++;
             }
             continue;
         }
@@ -255,7 +256,11 @@ Node *equality() {
 }
 
 Node *assign() {
-    return equality();
+    Node *node = equality();
+    if (consume('=')) {
+        node = new_node('=', node, assign());
+    }
+    return node;
 }
 
 Node *expr() {
@@ -270,6 +275,8 @@ Node *stmt() {
     return node;
 }
 
-Node *program() {
-    return stmt();
+void program() {
+    while (((Token *)tokens->data[pos])->ty != TK_EOF) {
+        vec_push(code, stmt());
+    }
 }

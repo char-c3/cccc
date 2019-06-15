@@ -63,7 +63,7 @@ Node *equality();
 Node *assign();
 Node *expr();
 Node *stmt();
-Node *program();
+void  program();
 
 void gen(Node *node);
 
@@ -74,5 +74,8 @@ extern char *user_input;
 // 100個以上のトークンは来ないものとする
 // Token tokens[100];
 extern Vector *tokens;
+
+// セミコロンで区切られた式はこの配列に保存する
+extern Vector *code;
 
 extern int pos;
