@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     // トークナイズしてパースする
     user_input = argv[1];
     tokenize();
-    Node *node = expr();
+    Node *node = program();
 
     // アセンブリの前半部を出力
     printf(".intel_syntax noprefix\n");

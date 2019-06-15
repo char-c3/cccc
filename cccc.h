@@ -6,12 +6,16 @@
 
 // トークンの型を表す値
 enum {
-    TK_EQ = 252,    // ==
-    TK_NE = 253,    // !=
-    TK_LE = 254,    // <=
-    TK_GE = 255,    // >=
     TK_NUM = 256,   // 整数トークン
+    TK_EQ,          // ==
+    TK_NE,          // !=
+    TK_LE,          // <=
+    TK_GE,          // >=
     TK_EOF,         // 入力の終わりを表すトークン
+};
+
+enum {
+    ND_NUM = 256,   // 整数のノードの型
 };
 
 // トークンの型
@@ -20,10 +24,6 @@ typedef struct {
     int val;     // tyがTK_NUMの場合、その数値
     char *input; // トークン文字列 (エラーメッセージ用)
 } Token;
-
-enum {
-    ND_NUM = 256,   // 整数のノードの型
-};
 
 typedef struct Node {
     int ty;             // 演算子かND_NUM
@@ -56,7 +56,10 @@ Node *mul();
 Node *add();
 Node *relational();
 Node *equality();
+Node *assign();
 Node *expr();
+Node *stmt();
+Node *program();
 
 void gen(Node *node);
 

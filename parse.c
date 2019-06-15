@@ -106,6 +106,13 @@ void tokenize() {
             continue;
         }
 
+        if ('a' <= *p && *p <= 'z') {
+            vec_push(tokens, new_token(*p, 0, p));
+            i++;
+            p++;
+            continue;
+        }
+
         if (isdigit(*p)) {
             // tokens[i].ty = TK_NUM;
             // tokens[i].input = p;
@@ -234,6 +241,18 @@ Node *equality() {
     }
 }
 
-Node *expr() {
+Node *assign() {
     return equality();
+}
+
+Node *expr() {
+    return assign();
+}
+
+Node *stmt() {
+    return expr();
+}
+
+Node *program() {
+    return stmt();
 }
