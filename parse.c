@@ -97,7 +97,7 @@ void tokenize() {
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/'
-         || *p == '(' || *p == ')' || *p == '>') {
+         || *p == '(' || *p == ')' || *p == '>' || *p == ';') {
             // tokens[i].ty = *p;
             // tokens[i].input = p;
             vec_push(tokens, new_token(*p, 0, p));
@@ -107,7 +107,7 @@ void tokenize() {
         }
 
         if ('a' <= *p && *p <= 'z') {
-            vec_push(tokens, new_token(*p, 0, p));
+            vec_push(tokens, new_token(TK_IDENT, 0, p));
             i++;
             p++;
             continue;
