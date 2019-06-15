@@ -17,6 +17,7 @@ enum {
 
 enum {
     ND_NUM = 256,   // 整数のノードの型
+    ND_IDENT,       // 識別子のノードの型
 };
 
 // トークンの型
@@ -31,6 +32,7 @@ typedef struct Node {
     struct Node *lhs;   // 左辺
     struct Node *rhs;   // 右辺
     int val;            // tyがND_NUMの場合のみ使う
+    char name;          // tyがND_IDENTの場合のみ使う
 } Node;
 
 typedef struct {
@@ -50,6 +52,7 @@ void error_at(char *loc, char *msg);
 void tokenize();
 Node *new_node(int ty, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+Node *new_node_ident(char name);
 int consume(int ty);
 Node *term();
 Node *unary();

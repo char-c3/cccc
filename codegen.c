@@ -6,6 +6,11 @@ void gen(Node *node) {
         return;
     }
 
+    if (node->ty == ND_IDENT) {
+        // TODO 変数に関する処理が必要
+        return;
+    }
+
     gen(node->lhs);
     gen(node->rhs);
 
@@ -45,6 +50,8 @@ void gen(Node *node) {
     case '/':
         printf("  cqo\n");
         printf("  idiv rdi\n");
+        break;
+    default:
         break;
     }
 

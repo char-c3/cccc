@@ -145,6 +145,14 @@ Node *new_node_num(int val) {
     return node;
 }
 
+Node *new_node_ident(char name) {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_IDENT;
+    node->name = name;
+    fprintf(stderr, "name is %c\n", name);
+    return node;
+}
+
 int consume(int ty) {
     // if (tokens[pos].ty != ty) {
     if (((Token *)tokens->data[pos])->ty != ty) {
@@ -167,6 +175,11 @@ Node *term() {
     // そうでなければ数値のはず
     if (((Token *)tokens->data[pos])->ty == TK_NUM) {
         return new_node_num(((Token *)tokens->data[pos++])->val);
+    }
+
+    // それでもなければ変数のはず
+    if (((Token *)tokens->data[pos])->ty == TK_IDENT) {
+        return new_node_ident(((Token *)tokens->data[pos++])->input[0]);
     }
 
     error_at(((Token *)tokens->data[pos])->input, "数値でも開きかっこでもないトークンです");
@@ -250,7 +263,11 @@ Node *expr() {
 }
 
 Node *stmt() {
-    return expr();
+    Node *node = expr();
+    if (!consume(';')) {
+        error_at(((Token *)tokens->data[pos])->input, "セミコロンがありません");
+    }
+    return node;
 }
 
 Node *program() {
