@@ -17,13 +17,23 @@ try() {
 }
 
 parse() {
-    input=$1
-    ./cccc "$1"
+    expected=$1
+    input=$2
+    ./cccc "$input"
     if [ $? = "0" ]; then
-        echo "parser can parse $input"
+        if [ $expected = "ok" ]; then
+            echo "parser can parse $input"
+        else
+            echo "$expected expected, but result is ok"
+            exit 1
+        fi
     else
-        echo "parse cannnot parse $input"
-        exit 1
+        if [ $expected = "ok" ]; then
+            echo "$expected expected, but result is failed"
+            exit 1
+        else
+            echo "parser cannnot parse $input"
+        fi
     fi
 }
 
@@ -53,11 +63,12 @@ try 1 "2 >= 2;"
 try 0 "2 >= 3;"
 try 0 "+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0;"
 try 0 "+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0;"
-parse "a;"
-parse "a=1;"
-parse "a + b;"
-parse "a=b=2;"
-parse "1;2;"
-parse "a=1;b=c=222;"
+parse "ok" "a;"
+parse "ok" "a=1;"
+parse "ok" "a + b;"
+parse "ok" "a=b=2;"
+parse "ok" "1;2;"
+parse "ok" "a=1;b=c=222;"
+parse "failed" "a=1"
 
 echo OK
